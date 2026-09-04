@@ -86,7 +86,7 @@ dead, because there's no MIDI note above 127.
 Type an **OSC address** and any **arguments**, then **store**. The **note on / note
 off** tab picks which layer you're editing.
 
-Type your server's IP into **SERVER**. Pasting a whole `host:port` works — it splits,
+Type your server's IP into **SERVER IP**. Pasting a whole `host:port` works — it splits,
 and applies the port to whichever transport is active. The **udp / tcp** tab swaps
 **PORT** to show the one that transport is using; each remembers its own.
 
