@@ -86,7 +86,7 @@ dead, because there's no MIDI note above 127.
 Type an **OSC address** and any **arguments**, then **store**. The **note on / note
 off** tab picks which layer you're editing.
 
-Type your server's IP into **SERVER**. Pasting a whole `host:port` works — it splits,
+Type your server's IP into **SERVER IP**. Pasting a whole `host:port` works — it splits,
 and applies the port to whichever transport is active. The **udp / tcp** tab swaps
 **PORT** to show the one that transport is using; each remembers its own.
 
@@ -143,6 +143,9 @@ That builds the zip and publishes it.
 
 See [NOTES.md](NOTES.md) for how the device actually works, and for the pile of Max
 and Live behaviours that cost real time to find.
+
+Contributions are welcome — [CONTRIBUTING.md](CONTRIBUTING.md) covers branch naming,
+the PR process, and the runtime rules that catch people out.
 
 ## License
 

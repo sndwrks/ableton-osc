@@ -1,0 +1,83 @@
+name: Bug Report
+description: Report a bug or issue
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: input
+    id: os-version
+    attributes:
+      label: macOS Version
+      description: Please specify your macOS version (e.g., macOS 14.2). The device is macOS-only.
+      placeholder: "macOS 14.2"
+    validations:
+      required: true
+
+  - type: input
+    id: live-version
+    attributes:
+      label: Live Version
+      description: What version of Ableton Live are you running, and is it Suite or Standard with the Max for Live add-on?
+      placeholder: "Live 12.1.5 Suite"
+    validations:
+      required: true
+
+  - type: input
+    id: device-version
+    attributes:
+      label: Device Version
+      description: The release name of the build you installed — the zip is named for it, and it is also in release.json beside the device.
+      placeholder: "amber-forging-anvil"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: transport
+    attributes:
+      label: Transport
+      description: Which transport was selected when the problem happened?
+      options:
+        - UDP
+        - TCP
+        - Both
+        - Not applicable
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What Happened
+      description: Describe what went wrong. Be as detailed as possible about what you observed.
+      placeholder: Tell us what you see
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Explain how to reproduce the issue. What did you do right before the problem occurred?
+      placeholder: |
+        1. Drag the device onto...
+        2. Click on...
+        3. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-outcome
+    attributes:
+      label: Expected Outcome
+      description: What should have happened instead? Describe the behavior you expected to see.
+      placeholder: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: max-console
+    attributes:
+      label: Max Console Output
+      description: Anything printed in Live's Max Window (View → Max Window). Many Max failures are silent, so "nothing at all" is a useful answer too.
+      placeholder: Paste any Max Window output here
+    validations:
+      required: false
