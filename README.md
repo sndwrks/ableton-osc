@@ -144,6 +144,9 @@ That builds the zip and publishes it.
 See [NOTES.md](NOTES.md) for how the device actually works, and for the pile of Max
 and Live behaviours that cost real time to find.
 
+Contributions are welcome — [CONTRIBUTING.md](CONTRIBUTING.md) covers branch naming,
+the PR process, and the runtime rules that catch people out.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
