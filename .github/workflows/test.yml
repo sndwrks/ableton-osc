@@ -1,0 +1,87 @@
+# Nothing ships that hasn't been asked a question — 2026-09-04T00:00:00Z
+
+name: Unit Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  js:
+    name: Lint and JS tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      # install.test.js reports a skip off macOS; the install-script job below
+      # is what actually drives the installer.
+      - name: Run tests
+        run: npm test
+
+      # shellcheck is preinstalled on the ubuntu runners, not the macOS ones.
+      - name: Shellcheck the installer
+        run: shellcheck --shell=bash install.command
+
+  install-script:
+    name: Installer (macOS)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The runner has no Ableton Live, so the installer takes its "no Max
+      # found" branch — which is one of the paths under test.
+      - name: Run tests
+        run: npm test
+
+  build-patch:
+    name: Device builds
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      # build-patch.py round-trip-verifies its own .amxd container and asserts
+      # its way through the patch. This proves it still runs; it deliberately
+      # does not diff against the committed device, whose byte-for-byte
+      # reproducibility is unverified.
+      - name: Regenerate the device
+        run: |
+          python3 build-patch.py
+          test -f sndwrks-osc.maxpat
+          test -f sndwrks-osc.amxd

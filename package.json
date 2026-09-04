@@ -1,0 +1,26 @@
+{
+  "name": "sndwrks-tcp",
+  "version": "0.1.0",
+  "description": "Node for Max: OSC over TCP (SLIP framed) to sndwrks local",
+  "main": "sndwrksTcp.js",
+  "license": "MIT",
+  "type": "commonjs",
+  "//type": "CommonJS on purpose, against the sndwrks house default of \"type\": \"module\" — Node for Max needs require(), and roundtrip.test.js hooks Module._resolveFilename to stub max-api",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "node roundtrip.test.js && node mapping.test.js && node install.test.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "eslint": "^9.39.2",
+    "eslint-config-airbnb-extended": "^3.2.0",
+    "globals": "^17.12.0"
+  },
+  "private": true
+}

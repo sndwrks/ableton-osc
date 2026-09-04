@@ -1,0 +1,185 @@
+# Sparked into existence by silicon and intent — 2026-09-04T00:00:00Z
+
+name: Release
+
+on:
+  push:
+    branches:
+      - release
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      # macOS runner, so the installer's own suite really runs before we ship it.
+      - name: Run tests
+        run: npm test
+
+      - name: Generate release name
+        id: release
+        run: |
+          SHA_FULL=$(git rev-parse HEAD)
+          SHA_SHORT=$(git rev-parse --short HEAD)
+
+          ADJ=(amber bright coral dusk ember fern gold haze iron jade kraft lunar mesa nova onyx pearl quartz rust sage teal ultra violet waltz xenon yukon zinc agate blaze cedar drift flint grove helix ingot jewel knoll lapis mirth opal pixel relay sonic timber umbra vortex wield)
+          VERB=(blazing casting drifting etching forging gliding honing igniting joining kindling launching mending nodding orbiting pulsing quelling rushing surging tracing uniting veering welding yielding zeroing arching binding crafting delving edging flowing grinding halting inking jetting keying linking molding)
+          NOUN=(anvil beacon cipher delta forge helix lumen nexus prism quartz relay sigma tensor umbra vortex zenith arbor basalt conduit dynamo ember flange girder harbor ingot junction keystone lantern matrix nimbus optic plinth rotor splice turret uplink vector)
+
+          HEX_A=${SHA_FULL:0:4}
+          HEX_V=${SHA_FULL:4:4}
+          HEX_N=${SHA_FULL:8:4}
+
+          IDX_A=$(( 16#$HEX_A % ${#ADJ[@]} ))
+          IDX_V=$(( 16#$HEX_V % ${#VERB[@]} ))
+          IDX_N=$(( 16#$HEX_N % ${#NOUN[@]} ))
+
+          RELEASE_NAME="${ADJ[$IDX_A]}-${VERB[$IDX_V]}-${NOUN[$IDX_N]}"
+          BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          echo "name=$RELEASE_NAME" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA_FULL" >> "$GITHUB_OUTPUT"
+          echo "sha_short=$SHA_SHORT" >> "$GITHUB_OUTPUT"
+          echo "build_date=$BUILD_DATE" >> "$GITHUB_OUTPUT"
+          echo "Release name: $RELEASE_NAME"
+
+      - name: Stage the payload
+        run: |
+          STAGE="dist/sndwrks-osc"
+          mkdir -p "$STAGE"
+
+          # The device is not frozen: it resolves these four scripts through
+          # Max's search path at load time, so they must land beside it.
+          cp sndwrks-osc.amxd \
+             sndwrksMap.js sndwrksGrid.js sndwrksLogo.js sndwrksTcp.js \
+             install.command \
+             "$STAGE/"
+
+          # MIT requires the notice to travel with every copy, and the zip is
+          # the copy almost everyone gets. install.command's PAYLOAD list is
+          # explicit, so this rides along in the folder without being installed.
+          cp LICENSE "$STAGE/"
+
+          # The Node for Max manifest, derived from this repo's package.json so
+          # there is only ever one source of truth. The dev-only fields would
+          # just mislead anyone who opened it in the install folder.
+          node -e '
+            const p = require("./package.json");
+            delete p.scripts;
+            delete p.devDependencies;
+            delete p["//type"];
+            console.log(JSON.stringify(p, null, 2));
+          ' > "$STAGE/package.json"
+
+          # Two of the sources are mode 600 in the tree; ship them readable.
+          chmod 644 "$STAGE"/*.js "$STAGE"/*.amxd "$STAGE/package.json" "$STAGE/LICENSE"
+          chmod 755 "$STAGE/install.command"
+
+          printf '{\n  "release_name": "%s",\n  "sha": "%s",\n  "sha_short": "%s",\n  "build_date": "%s"\n}\n' \
+            "${{ steps.release.outputs.name }}" \
+            "${{ steps.release.outputs.sha }}" \
+            "${{ steps.release.outputs.sha_short }}" \
+            "${{ steps.release.outputs.build_date }}" \
+            > "$STAGE/release.json"
+
+          cat > "$STAGE/INSTALL.txt" <<'TXT'
+          sndwrks-osc — a Max for Live MIDI effect that sends OSC to sndwrks local
+          =======================================================================
+
+          Requires Ableton Live Suite, or Live Standard with the Max for Live
+          add-on. You do NOT need Node installed — Max ships its own.
+
+          To install:
+
+            1. Right-click install.command and choose Open.
+            2. macOS will warn that it is from an unidentified developer.
+               Click Open again. This only happens the first time. A plain
+               double-click gets refused instead of offering you the choice.
+            3. Follow the prompts, then restart Live.
+
+          If the Finder route gives you trouble, from a Terminal in this folder:
+
+            chmod +x install.command
+            ./install.command
+
+          Options: --dest PATH, --force, --dry-run, --help
+
+          To install by hand instead, copy all six of these into
+          ~/Music/Ableton/User Library/Presets/MIDI Effects/Max MIDI Effect/ :
+
+            sndwrks-osc.amxd
+            sndwrksMap.js
+            sndwrksGrid.js
+            sndwrksLogo.js
+            sndwrksTcp.js
+            package.json
+
+          All six. The device is not frozen, so it looks for the four scripts on
+          Max's search path at load time. Drop the .amxd on its own and the
+          objects load with the wrong outlet count and silently discard their
+          patch cords.
+
+          Then drag sndwrks-osc onto a MIDI track from Live's browser, under
+          User Library -> Presets -> MIDI Effects -> Max MIDI Effect.
+          TXT
+
+          ls -la "$STAGE"
+
+      - name: Create release zip
+        run: |
+          ZIP_NAME="sndwrks-osc-${{ steps.release.outputs.name }}.zip"
+          # Zip the folder, not its contents, so unzipping produces one tidy
+          # directory rather than eight loose files in ~/Downloads. zip records
+          # the unix mode, so install.command keeps its executable bit.
+          (cd dist && zip -r -X "../$ZIP_NAME" sndwrks-osc)
+          unzip -l "$ZIP_NAME"
+          echo "zip_name=$ZIP_NAME" >> "$GITHUB_ENV"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RELEASE_NAME="${{ steps.release.outputs.name }}"
+          gh release create "$RELEASE_NAME" \
+            "${{ env.zip_name }}" \
+            --title "$RELEASE_NAME" \
+            --notes "Release **$RELEASE_NAME**
+
+          - SHA: \`${{ steps.release.outputs.sha_short }}\`
+          - Built: ${{ steps.release.outputs.build_date }}
+
+          ### Install
+
+          1. Download \`${{ env.zip_name }}\` and unzip it.
+          2. **Right-click \`install.command\` → Open**, then **Open** again when macOS
+             warns about an unidentified developer. A plain double-click gets refused
+             rather than offering you the choice.
+          3. Restart Live, then drag **sndwrks-osc** onto a MIDI track from
+             User Library → Presets → MIDI Effects → Max MIDI Effect.
+
+          Requires Live Suite, or Standard with the Max for Live add-on. You do not
+          need Node installed — Max ships its own."
