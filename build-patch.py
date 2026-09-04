@@ -223,7 +223,7 @@ box("logo", "v8ui", None, (140, 690, LOGO_W, 159), 1, 1,
 box("grid", "v8ui", None, (300, 690, GRID_W, 122), 1, 1,
     pres=(GRID_X, 6, GRID_W, 122), extra={"filename": "sndwrksGrid.js"})
 
-box("lblHost", "comment", "S E R V E R", (300, 790, 200, 18), 1, 0,
+box("lblHost", "comment", "S E R V E R   I P", (300, 790, 200, 18), 1, 0,
     pres=(SERVER_X, 132, SERVER_W, 11), fontsize=9, textcolor=DIM, font=True)
 box("teHost", "textedit", None, (300, 812, 192, 22), 1, 3,
     pres=(SERVER_X, 145, SERVER_W, 20),

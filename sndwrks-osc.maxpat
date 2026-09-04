@@ -98,8 +98,8 @@
   "platform_compatibility": 0,
   "project": {
    "version": 1,
-   "creationdate": 3871384390,
-   "modificationdate": 3871384390,
+   "creationdate": 3871395817,
+   "modificationdate": 3871395817,
    "viewrect": [
     0.0,
     0.0,
@@ -703,7 +703,7 @@
       200.0,
       18.0
      ],
-     "text": "S E R V E R",
+     "text": "S E R V E R   I P",
      "fontsize": 9.0,
      "fontname": "Ableton Sans",
      "textcolor": [
